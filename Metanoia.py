@@ -12,7 +12,7 @@ def is_admin():
         return False
 
 if not is_admin():
-    messagebox.showerror("Error", "You need to have Administrator rights to run this script.")
+    messagebox.showerror("Error", "You need to have Administrator rights to run this program.")
     exit()
 
 # Define the registry and system commands
@@ -119,7 +119,7 @@ checkboxes = []
 
 # Create a checkbox for each command
 for cmd in commands:
-    var = tk.BooleanVar()
+    var = tk.BooleanVar(value=True)  # Set default value to True (checked)
     check_vars.append(var)
     cb = tk.Checkbutton(root, text=cmd["description"], variable=var)
     checkboxes.append(cb)
