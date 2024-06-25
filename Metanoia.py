@@ -38,7 +38,19 @@ commands = [
         "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\\WindowsSettings\\SecuritySettings\\AccountPolicies\\PasswordPolicy" /v Passwordmustmeetcomplexityrequirements /t REG_SZ /d Enabled /f'
     },
     {
-        "description": "Account lockout threshold (CIS Control 1.2.1)",
+        "description": "Ensure 'Relax minimum password length limits' is set to 'Enabled' (CIS Control 1.1.6)",
+        "command": 'reg add "HKLM\\System\\CurrentControlSet\\Control\\SAM" /v RelaxMinimumPasswordLengthLimits /t REG_DWORD /d 1'
+    },
+    {
+        "description": "Ensure 'Store passwords using reversible encryption' is set to 'Disabled' (CIS Control 1.1.7) ",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\\WindowsSettings\\SecuritySettings\\AccountPolicies\\PasswordPolicy" /v Storepasswordsusingreverseableencryption /d Disabled'
+    },
+    {
+        "description": "Ensure 'Account lockout duration' is set to '15 or more minute(s)'  (CIS Control 1.2.1)",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\WindowsSettings\\SecuritySettings\\AccountPolicies\\AccountLockoutPolicy" /v Accountlockoutduration  /d 15 /f'
+    },
+    {
+        "description": "Account lockout threshold (CIS Control 1.2.2)",
         "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v LockoutBadCount /t REG_DWORD /d 5 /f'
     },
     {
