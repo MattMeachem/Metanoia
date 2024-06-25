@@ -5,6 +5,7 @@ If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 # Function to set a registry value
+
 function Set-RegistryValue {
     param (
         [string]$KeyPath,
@@ -27,6 +28,15 @@ Set-RegistryValue -KeyPath "HKLM\SYSTEM\CurrentControlSet\Services\Netlogon\Para
 
 # Minimum password length (CIS Control 1.1.2)
 Set-RegistryValue -KeyPath "HKLM\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" -Name "MinimumPasswordLength" -Value "14"
+
+# Minimum password age is set to 1 or more day(s) (CIS Control 1.1.3)
+Set-RegistryValue -KeyPath "HKLM\SYSTEM\CurrentControlSet\Policies\WindowsSettings\SecuritySettings\AccountPolicies\PasswordPolicy" -Name "Minimumpasswordage" -Value "1"
+
+# Ensure Minimum password length' is set to '14 or more character(s) (CIS Control 1.1.4)
+Set-RegistryValue -KeyPath "HKLM\SYSTEM\CurrentControlSet\Policies\WindowsSettings\SecuritySettings\AccountPolicies\PasswordPolicy" -Name "Minimumpasswordlength" -Value "14"
+
+# Ensure Password must meet complexity requirements is set to 'Enabled' (CIS Control 1.1.5)
+Set-RegistryValue -KeyPath "HKLM\SYSTEM\CurrentControlSet\Policies\WindowsSettings\SecuritySettings\AccountPolicies\PasswordPolicy" -Name "Passwordmustmeetcomplexityrequirements " -Value "Enabled"
 
 # Account lockout threshold (CIS Control 1.2.1)
 Set-RegistryValue -KeyPath "HKLM\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters" -Name "LockoutBadCount" -Value "5"
