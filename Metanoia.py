@@ -27,39 +27,31 @@ commands = [
     },
     {
         "description": "Minimum password age is set to 1 or more day(s) (CIS Control 1.1.3)",
-        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\\WindowsSettings\\SecuritySettings\\AccountPolicies\\PasswordPolicy" /v Minimumpasswordage /t REG_DWORD /d 1 /f'
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v MinimumPasswordAge /t REG_DWORD /d 1 /f'
     },
     {
         "description": "Ensure Minimum password length' is set to '14 or more character(s) (CIS Control 1.1.4)",
-        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\\WindowsSettings\\SecuritySettings\\AccountPolicies\\PasswordPolicy" /v Minimumpasswordlength /t REG_DWORD /d 14 /f'
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v MinimumPasswordLength /t REG_DWORD /d 14 /f'
     },
     {
         "description": "Ensure Password must meet complexity requirements is set to 'Enabled' (CIS Control 1.1.5)",
-        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\\WindowsSettings\\SecuritySettings\\AccountPolicies\\PasswordPolicy" /v Passwordmustmeetcomplexityrequirements /t REG_SZ /d Enabled /f'
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v PasswordComplexity /t REG_DWORD /d 1 /f'
     },
     {
         "description": "Ensure 'Relax minimum password length limits' is set to 'Enabled' (CIS Control 1.1.6)",
-        "command": 'reg add "HKLM\\System\\CurrentControlSet\\Control\\SAM" /v RelaxMinimumPasswordLengthLimits /t REG_DWORD /d 1'
+        "command": 'reg add "HKLM\\System\\CurrentControlSet\\Control\\SAM" /v RelaxMinimumPasswordLengthLimits /t REG_DWORD /d 1 /f'
     },
     {
-        "description": "Ensure 'Store passwords using reversible encryption' is set to 'Disabled' (CIS Control 1.1.7) ",
-        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\\WindowsSettings\\SecuritySettings\\AccountPolicies\\PasswordPolicy" /v Storepasswordsusingreverseableencryption /d Disabled'
+        "description": "Ensure 'Store passwords using reversible encryption' is set to 'Disabled' (CIS Control 1.1.7)",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v ClearTextPassword /t REG_DWORD /d 0 /f'
     },
     {
         "description": "Ensure 'Account lockout duration' is set to '15 or more minute(s)'  (CIS Control 1.2.1)",
-        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Policies\WindowsSettings\\SecuritySettings\\AccountPolicies\\AccountLockoutPolicy" /v Accountlockoutduration  /d 15 /f'
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v LockoutDuration /t REG_DWORD /d 15 /f'
     },
     {
         "description": "Account lockout threshold (CIS Control 1.2.2)",
         "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v LockoutBadCount /t REG_DWORD /d 5 /f'
-    },
-    {
-        "description": "Set 'Audit Logon Events' to 'Success and Failure' (CIS Control 2.3.1)",
-        "command": 'auditpol /set /subcategory:"Logon" /success:enable /failure:enable'
-    },
-    {
-        "description": "Disable Guest account (CIS Control 3.2)",
-        "command": 'net user guest /active:no'
     },
     {
         "description": "Enable 'Do not display last user name' (CIS Control 2.2.1)",
@@ -68,6 +60,14 @@ commands = [
     {
         "description": "Disable 'Do not require CTRL+ALT+DEL' (CIS Control 2.2.2)",
         "command": 'reg add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v DisableCAD /t REG_DWORD /d 0 /f'
+    },
+    {
+        "description": "Set 'Audit Logon Events' to 'Success and Failure' (CIS Control 2.3.1)",
+        "command": 'auditpol /set /subcategory:"Logon" /success:enable /failure:enable'
+    },
+    {
+        "description": "Disable Guest account (CIS Control 3.2)",
+        "command": 'net user guest /active:no'
     },
     {
         "description": "Enable Windows Defender (CIS Control 5.1)",
