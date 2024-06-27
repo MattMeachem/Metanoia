@@ -16,7 +16,7 @@ if not is_admin():
     messagebox.showerror("Error", "You need to have Administrator rights to run this program.")
     exit()
 
-# Define the registry and system commands
+# Define the registry commands
 commands = [
     {
         "description": "Enforce password history (CIS Control 1.1.1)",
@@ -59,16 +59,32 @@ commands = [
         "command": 'reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v AllowAdministratorAccountLockout /t REG_DWORD /d 1 /f'
     },
     {
-        "description": " Ensure 'Reset account lockout counter after' is set to '15 or more minute(s) (CIS Control 1.2.4)",
+        "description": "Ensure 'Reset account lockout counter after' is set to '15 or more minute(s) (CIS Control 1.2.4)",
         "command": 'reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v ResetAccountLockoutCounterAfter /t REG_DWORD /d 15 /f'
     },
     {
-        "description": "Enable 'Do not display last user name' (CIS Control 2.2.1)",
-        "command": 'reg add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v DontDisplayLastUserName /t REG_DWORD /d 1 /f'
+        "description": "Ensure 'Access Credential Manager as a trusted caller' is set to 'No One' (CIS Control 2.2.1)",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa" /v SCENoOne /t REG_SZ /d "" /f'
     },
     {
-        "description": "Disable 'Do not require CTRL+ALT+DEL' (CIS Control 2.2.2)",
-        "command": 'reg add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v DisableCAD /t REG_DWORD /d 0 /f'
+        "description": "Ensure 'Adjust memory quotas for a process' is set to 'Administrators, LOCAL SERVICE, NETWORK SERVICE' (CIS Control 2.2.4)",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v AdjustProcessAccessToken /t REG_MULTI_SZ /d "Administrators\0LOCAL SERVICE\0NETWORK SERVICE" /f'
+    },
+    {
+        "description": "Ensure 'Act as part of the operating system' is set to 'No One' (CIS Control 2.2.2)",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa" /v restrictanonymous /t REG_DWORD /d 1 /f'
+    },
+    {
+        "description": "Ensure 'Access this computer from the network' is set to 'Administrators, Remote Desktop Users' (CIS Control 2.2.2)",
+        "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa" /v restrictanonymous /t REG_DWORD /d 1 /f'
+    },
+    {
+        "description": "Enable 'Do not display last user name' (CIS Control 2.3.7.2)",
+        "command": 'reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v DontDisplayLastUserName /t REG_DWORD /d 1 /f'
+    },
+    {
+        "description": "Disable 'Do not require CTRL+ALT+DEL' (CIS Control 2.3.7.1)",
+        "command": 'reg add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v DisableCAD /t REG_DWORD /d 1 /f'
     },
     {
         "description": "Set 'Audit Logon Events' to 'Success and Failure' (CIS Control 2.3.1)",
@@ -156,28 +172,4 @@ checkboxes = []
 # Create a checkbox for each command
 for cmd in commands:
     var = tk.BooleanVar(value=True)  # Set default value to True (checked)
-    check_vars.append(var)
-    cb = tk.Checkbutton(root, text=cmd["description"], variable=var)
-    checkboxes.append(cb)
-
-# Pagination variables
-items_per_page = 10
-current_page = 0
-
-# Navigation buttons
-prev_button = tk.Button(root, text="Previous", command=prev_page)
-next_button = tk.Button(root, text="Next", command=next_page)
-
-# Place navigation buttons
-prev_button.pack(side=tk.LEFT)
-next_button.pack(side=tk.RIGHT)
-
-# Create a button to run the selected commands
-run_button = tk.Button(root, text="Run Selected", command=run_selected_commands)
-run_button.pack(side=tk.BOTTOM)
-
-# Display the initial set of checkboxes
-update_checkboxes()
-
-# Start the GUI event loop
-root.mainloop()
+    check_vars
