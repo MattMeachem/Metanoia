@@ -120,7 +120,7 @@ def update_checkboxes():
     """
     for cb in checkboxes:
         cb.pack_forget()
-    
+
     start_idx = current_page * items_per_page
     end_idx = start_idx + items_per_page
     for i in range(start_idx, end_idx):
@@ -155,7 +155,7 @@ def update_navigation_buttons():
         prev_button.config(state=tk.DISABLED)
     else:
         prev_button.config(state=tk.NORMAL)
-    
+
     if (current_page + 1) * items_per_page >= len(commands):
         next_button.config(state=tk.DISABLED)
     else:
@@ -172,4 +172,78 @@ checkboxes = []
 # Create a checkbox for each command
 for cmd in commands:
     var = tk.BooleanVar(value=True)  # Set default value to True (checked)
-    check_vars
+    check_vars.append(var)
+    cb = tk.Checkbutton(root, text=cmd["description"], variable=var)
+    checkboxes.append(cb)
+
+# Pagination setup
+current_page = 0
+items_per_page = 10
+
+# Function to run selected commands
+def run_selected_commands():
+    for var, cmd in zip(check_vars, commands):
+        if var.get():
+            try:
+                subprocess.run(cmd["command"], shell=True, check=True)
+                print(f"Successfully executed: {cmd['description']}")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to execute: {cmd['description']}\nError: {e}")
+
+    messagebox.showinfo("Info", "Selected commands executed successfully.")
+
+# Function to update checkboxes based on current page
+def update_checkboxes():
+    for cb in checkboxes:
+        cb.pack_forget()
+
+    start_idx = current_page * items_per_page
+    end_idx = start_idx + items_per_page
+    for i in range(start_idx, end_idx):
+        if i < len(checkboxes):
+            checkboxes[i].pack(anchor='w')
+
+    update_navigation_buttons()
+
+# Function to navigate to previous page
+def prev_page():
+    global current_page
+    if current_page > 0:
+        current_page -= 1
+        update_checkboxes()
+
+# Function to navigate to next page
+def next_page():
+    global current_page
+    if (current_page + 1) * items_per_page < len(checkboxes):
+        current_page += 1
+        update_checkboxes()
+
+# Function to update navigation buttons state
+def update_navigation_buttons():
+    if current_page == 0:
+        prev_button.config(state=tk.DISABLED)
+    else:
+        prev_button.config(state=tk.NORMAL)
+
+    if (current_page + 1) * items_per_page >= len(checkboxes):
+        next_button.config(state=tk.DISABLED)
+    else:
+        next_button.config(state=tk.NORMAL)
+
+# Buttons for navigation
+prev_button = tk.Button(root, text="Previous", command=prev_page)
+prev_button.pack(side=tk.LEFT, padx=10, pady=10)
+
+next_button = tk.Button(root, text="Next", command=next_page)
+next_button.pack(side=tk.RIGHT, padx=10, pady=10)
+
+# Run button
+run_button = tk.Button(root, text="Run Selected Commands", command=run_selected_commands)
+run_button.pack(side=tk.BOTTOM, pady=20)
+
+# Initial checkbox display
+update_checkboxes()
+
+# Start the tkinter main loop
+root.mainloop()
