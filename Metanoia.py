@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox
 import subprocess
-import os
 import ctypes
 
-# Ensure script is run as an administrator
 def is_admin():
+    """
+    Check if the script is running with administrative privileges.
+    """
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
@@ -54,6 +55,14 @@ commands = [
         "command": 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters" /v LockoutBadCount /t REG_DWORD /d 5 /f'
     },
     {
+        "description": "Ensure 'Allow Administrator account lockout' is set to 'Enabled' (CIS Control 1.2.3)",
+        "command": 'reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v AllowAdministratorAccountLockout /t REG_DWORD /d 1 /f'
+    },
+    {
+        "description": " Ensure 'Reset account lockout counter after' is set to '15 or more minute(s) (CIS Control 1.2.4)",
+        "command": 'reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v ResetAccountLockoutCounterAfter /t REG_DWORD /d 15 /f'
+    },
+    {
         "description": "Enable 'Do not display last user name' (CIS Control 2.2.1)",
         "command": 'reg add "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System" /v DontDisplayLastUserName /t REG_DWORD /d 1 /f'
     },
@@ -76,6 +85,9 @@ commands = [
 ]
 
 def run_selected_commands():
+    """
+    Run the selected commands based on the checked checkboxes.
+    """
     for var, cmd in zip(check_vars, commands):
         if var.get():
             try:
@@ -87,6 +99,9 @@ def run_selected_commands():
     messagebox.showinfo("Info", "Selected commands executed successfully.")
 
 def update_checkboxes():
+    """
+    Update the visibility of checkboxes based on the current page.
+    """
     for cb in checkboxes:
         cb.pack_forget()
     
@@ -99,18 +114,27 @@ def update_checkboxes():
     update_navigation_buttons()
 
 def prev_page():
+    """
+    Navigate to the previous page of checkboxes.
+    """
     global current_page
     if current_page > 0:
         current_page -= 1
         update_checkboxes()
 
 def next_page():
+    """
+    Navigate to the next page of checkboxes.
+    """
     global current_page
     if (current_page + 1) * items_per_page < len(commands):
         current_page += 1
         update_checkboxes()
 
 def update_navigation_buttons():
+    """
+    Update the state of the navigation buttons based on the current page.
+    """
     if current_page == 0:
         prev_button.config(state=tk.DISABLED)
     else:
