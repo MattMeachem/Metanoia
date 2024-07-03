@@ -4,29 +4,6 @@ import subprocess
 import ctypes
 import sys
 
-def run_command(command):
-    try:
-        subprocess.run(command, check=True, shell=True)
-        messagebox.showinfo("Success", "Command executed successfully!")
-    except subprocess.CalledProcessError as e:
-        messagebox.showerror("Error", f"Error executing command: {e}")
-
-def check_admin():
-    try:
-        # Check if the script is running with administrator privileges
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            messagebox.showerror("Error", "This script requires administrator privileges. Please run as administrator.")
-            return False
-        return True
-    except Exception as e:
-        messagebox.showerror("Error", f"Error checking administrator privileges: {e}")
-        return False
-
-def execute_commands():
-    # Ensure the script has administrator privileges
-    if not check_admin():
-        return
-
 # Command descriptions and corresponding registry commands
 commands = [
     {
@@ -232,10 +209,6 @@ commands = [
     {
         "description": "Ensure 'Network security: Minimum session security for NTLM SSP based (including secure RPC) clients' is set to 'Require NTLMv2 session security, Require 128-bit encryption' (CIS Control 2.3.11.8)",
         "command": 'reg add "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0" /v NtlmMinClientSec /t REG_DWORD /d 537395200 /f'
-    },
-    {
-        "description": "Ensure 'Network security: Minimum session security for NTLM SSP based (including secure RPC) servers' is set to 'Require NTLMv2 session security, Require 128-bit encryption' (CIS Control 2.3.11.9)",
-        "command": 'reg add "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0" /v NtlmMinServerSec /t REG_DWORD /d 537395200 /f'
     },
     {
         "description": "Ensure 'Network security: Restrict NTLM: Add remote server exceptions for NTLM authentication' is set to 'Authenticated server' (CIS Control 2.3.11.10)",
@@ -463,20 +436,108 @@ commands = [
     }
 ]
 
-# Execute each command in the list
-    for cmd in commands:
-        run_command(cmd["command"])
+# Global list to store command variables
+command_vars = []
 
+# Number of commands per page
+COMMANDS_PER_PAGE = 10
+
+# Global variable to track current page
+current_page = 0
+
+# Function to run a command
+def run_command(command):
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, shell=True)
+        print(f"Command output for '{command}':")
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command '{command}': {e}")
+
+# Function to check if script is running with admin privileges
+def check_admin():
+    try:
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            print("This script requires administrator privileges. Please run as administrator.")
+            return False
+        return True
+    except Exception as e:
+        print(f"Error checking administrator privileges: {e}")
+        return False
+
+# Function to execute selected commands
+def execute_selected():
+    selected_commands = []
+    for var in command_vars:
+        if var.get():
+            idx = command_vars.index(var) + current_page * COMMANDS_PER_PAGE
+            selected_commands.append(commands[idx]["command"])
+    for cmd in selected_commands:
+        run_command(cmd)
+
+# GUI function
 def main():
+    # Ensure the script has administrator privileges
+    if not check_admin():
+        return
+
     root = tk.Tk()
     root.title("Execute Commands with Admin Privileges")
 
-    # GUI Setup
-    label = tk.Label(root, text="Click 'Execute Commands' to run the predefined commands as Administrator")
-    label.pack(pady=20)
+    # Function to create command checkboxes for the current page
+    def create_command_checkboxes(page):
+        global command_vars
+        command_vars = []
+        # Clear previous checkboxes
+        for widget in root.grid_slaves():
+            widget.grid_forget()
 
-    button = tk.Button(root, text="Execute Commands", command=execute_commands)
-    button.pack(pady=10)
+        start_idx = page * COMMANDS_PER_PAGE
+        end_idx = min((page + 1) * COMMANDS_PER_PAGE, len(commands))
+
+        for idx in range(start_idx, end_idx):
+            command_var = tk.BooleanVar(value=True)  # Checkbox is checked by default
+            command_vars.append(command_var)
+            command_description = commands[idx]["description"]
+            checkbox = tk.Checkbutton(root, text=command_description, variable=command_var)
+            checkbox.grid(row=idx % COMMANDS_PER_PAGE, column=0, sticky=tk.W)
+
+    # Function to navigate to the next page
+    def next_page():
+        global current_page
+        current_page += 1
+        create_command_checkboxes(current_page)
+        update_navigation_buttons()
+
+    # Function to navigate to the previous page
+    def prev_page():
+        global current_page
+        if current_page > 0:
+            current_page -= 1
+            create_command_checkboxes(current_page)
+            update_navigation_buttons()
+
+    def update_navigation_buttons():
+        prev_button.config(state=tk.NORMAL if current_page > 0 else tk.DISABLED)
+        next_button.config(state=tk.NORMAL if current_page < (len(commands) - 1) // COMMANDS_PER_PAGE else tk.DISABLED)
+
+    create_command_checkboxes(current_page)
+
+    # Execute Selected button
+    execute_button = tk.Button(root, text="Execute Selected", command=execute_selected)
+    execute_button.grid(row=COMMANDS_PER_PAGE, column=0, pady=10)
+
+    # Navigation buttons
+    nav_frame = tk.Frame(root)
+    nav_frame.grid(row=COMMANDS_PER_PAGE, column=1, pady=10)
+
+    prev_button = tk.Button(nav_frame, text="Previous", command=prev_page)
+    prev_button.grid(row=0, column=0, padx=5)
+    prev_button.config(state=tk.DISABLED if current_page == 0 else tk.NORMAL)
+
+    next_button = tk.Button(nav_frame, text="Next", command=next_page)
+    next_button.grid(row=0, column=1, padx=5)
+    next_button.config(state=tk.DISABLED if current_page == (len(commands) - 1) // COMMANDS_PER_PAGE else tk.NORMAL)
 
     root.mainloop()
 
