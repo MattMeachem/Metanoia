@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 import subprocess
 import ctypes
 import sys
@@ -436,110 +436,92 @@ commands = [
     }
 ]
 
-# Global list to store command variables
-command_vars = []
-
-# Number of commands per page
-COMMANDS_PER_PAGE = 10
-
-# Global variable to track current page
-current_page = 0
-
-# Function to run a command
-def run_command(command):
+# Check if running as admin on Windows
+def is_admin():
     try:
-        result = subprocess.run(command, capture_output=True, text=True, shell=True)
-        print(f"Command output for '{command}':")
-        print(result.stdout)
-    except subprocess.CalledProcessError as e:
-        print(f"Error executing command '{command}': {e}")
-
-# Function to check if script is running with admin privileges
-def check_admin():
-    try:
-        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-            print("This script requires administrator privileges. Please run as administrator.")
-            return False
-        return True
-    except Exception as e:
-        print(f"Error checking administrator privileges: {e}")
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except:
         return False
 
-# Function to execute selected commands
-def execute_selected():
+# Function to run selected commands
+def run_selected_commands():
     selected_commands = []
-    for var in command_vars:
-        if var.get():
-            idx = command_vars.index(var) + current_page * COMMANDS_PER_PAGE
-            selected_commands.append(commands[idx]["command"])
+    for cmd_info in commands_displayed:
+        if command_vars[cmd_info["description"]].get() == 1:
+            selected_commands.append(cmd_info["command"])
+    
+    # Execute selected commands (you can define your logic here)
     for cmd in selected_commands:
-        run_command(cmd)
+        print(f"Running command: {cmd}")
+        # Execute your command logic here
 
-# GUI function
-def main():
-    # Ensure the script has administrator privileges
-    if not check_admin():
-        return
+    messagebox.showinfo("Commands Executed", "Selected commands have been executed.")
 
-    root = tk.Tk()
-    root.title("Execute Commands with Admin Privileges")
+# Function to display commands on the GUI for the current page
+def show_commands(page_num):
+    global commands_displayed
+    page_start = page_num * 10
+    page_end = page_start + 10
+    commands_displayed = commands[page_start:page_end]
 
-    # Function to create command checkboxes for the current page
-    def create_command_checkboxes(page):
-        global command_vars
-        command_vars = []
-        # Clear previous checkboxes
-        for widget in root.grid_slaves():
-            widget.grid_forget()
+    # Clear previous checkboxes
+    for widget in commands_frame.winfo_children():
+        widget.destroy()
 
-        start_idx = page * COMMANDS_PER_PAGE
-        end_idx = min((page + 1) * COMMANDS_PER_PAGE, len(commands))
+    # Display commands for the current page
+    for i, cmd_info in enumerate(commands_displayed, start=1):
+        var = tk.IntVar(value=1)  # Default to enabled (1), change to 0 to disable by default
+        command_vars[cmd_info["description"]] = var
+        chk = tk.Checkbutton(commands_frame, text=cmd_info["description"], variable=var)
+        chk.grid(row=i, column=0, sticky='w', padx=10, pady=5)
 
-        for idx in range(start_idx, end_idx):
-            command_var = tk.BooleanVar(value=True)  # Checkbox is checked by default
-            command_vars.append(command_var)
-            command_description = commands[idx]["description"]
-            checkbox = tk.Checkbutton(root, text=command_description, variable=command_var)
-            checkbox.grid(row=idx % COMMANDS_PER_PAGE, column=0, sticky=tk.W)
-
-    # Function to navigate to the next page
-    def next_page():
-        global current_page
+# Function to handle page navigation
+def next_page():
+    global current_page
+    if current_page < max_pages - 1:
         current_page += 1
-        create_command_checkboxes(current_page)
-        update_navigation_buttons()
+        show_commands(current_page)
 
-    # Function to navigate to the previous page
-    def prev_page():
-        global current_page
-        if current_page > 0:
-            current_page -= 1
-            create_command_checkboxes(current_page)
-            update_navigation_buttons()
+def prev_page():
+    global current_page
+    if current_page > 0:
+        current_page -= 1
+        show_commands(current_page)
 
-    def update_navigation_buttons():
-        prev_button.config(state=tk.NORMAL if current_page > 0 else tk.DISABLED)
-        next_button.config(state=tk.NORMAL if current_page < (len(commands) - 1) // COMMANDS_PER_PAGE else tk.DISABLED)
+# Main tkinter window
+root = tk.Tk()
+root.title("Commands GUI")
 
-    create_command_checkboxes(current_page)
+# Check admin status
+if not is_admin():
+    messagebox.showwarning("Admin Privileges Required", "This script requires admin privileges to run properly.")
 
-    # Execute Selected button
-    execute_button = tk.Button(root, text="Execute Selected", command=execute_selected)
-    execute_button.grid(row=COMMANDS_PER_PAGE, column=0, pady=10)
+# Create a frame for commands
+commands_frame = ttk.Frame(root)
+commands_frame.pack(padx=10, pady=10)
 
-    # Navigation buttons
-    nav_frame = tk.Frame(root)
-    nav_frame.grid(row=COMMANDS_PER_PAGE, column=1, pady=10)
+# Initialize variables to store command checkboxes and pagination
+command_vars = {}
+commands_displayed = []  # List to hold commands displayed on current page
+current_page = 0
 
-    prev_button = tk.Button(nav_frame, text="Previous", command=prev_page)
-    prev_button.grid(row=0, column=0, padx=5)
-    prev_button.config(state=tk.DISABLED if current_page == 0 else tk.NORMAL)
+# Calculate total pages
+total_commands = len(commands)
+max_pages = (total_commands - 1) // 10 + 1  # Calculate total pages
 
-    next_button = tk.Button(nav_frame, text="Next", command=next_page)
-    next_button.grid(row=0, column=1, padx=5)
-    next_button.config(state=tk.DISABLED if current_page == (len(commands) - 1) // COMMANDS_PER_PAGE else tk.NORMAL)
+# Display initial commands
+show_commands(current_page)
 
-    root.mainloop()
+# Navigation buttons
+prev_button = tk.Button(root, text="Previous Page", command=prev_page)
+prev_button.pack(side=tk.LEFT, padx=10, pady=10)
 
-if __name__ == "__main__":
-    main()
+next_button = tk.Button(root, text="Next Page", command=next_page)
+next_button.pack(side=tk.RIGHT, padx=10, pady=10)
+
+# Run button to execute selected commands
+run_button = tk.Button(root, text="Run Selected Commands", command=run_selected_commands)
+run_button.pack(pady=10)
+
+# Run the tkinter main loop
+root.mainloop()
